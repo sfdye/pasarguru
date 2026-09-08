@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.1+6 — 2026-09-05
+
+### Fixed
+
+- Fix zh translations for accuracy and idiomatic Singapore usage (#71)
+
 ## v1.0.0+5 — 2026-08-31
 
 ### Fixed
