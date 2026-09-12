@@ -35,6 +35,13 @@ export interface Palette {
   statusClosed: string;
   /** Text and icons drawn on any of the status fills. */
   statusOn: string;
+  /**
+   * Text drawn on the warn/soon fills. Those stay bright mid-tones (they must keep reading as
+   * "warning orange", not drift toward closed-red), which fails the 4.5:1 bar with white text —
+   * so those two fills take the dark body text colour instead. Same value in both schemes
+   * because the fills themselves are shared.
+   */
+  statusOnWarn: string;
 
   noticeBg: string;
   noticeBorder: string;
@@ -53,7 +60,9 @@ export const lightColors: Palette = {
 
   text: '#1a1a1a',
   textMuted: '#666666',
-  textFaint: '#999999',
+  // Passes the 3:1 graphical-object bar on `surface` and `bg` — it only draws icons now that
+  // every `tone="faint"` text moved up to `muted`.
+  textFaint: '#8a8a8a',
 
   border: '#e0e0e0',
   borderLight: '#eeeeee',
@@ -70,6 +79,7 @@ export const lightColors: Palette = {
   statusSoon: '#f57c00',
   statusClosed: '#c62828',
   statusOn: '#ffffff',
+  statusOnWarn: '#1a1a1a',
 
   noticeBg: '#fff3e0',
   noticeBorder: '#ffcc80',
@@ -107,6 +117,7 @@ export const darkColors: Palette = {
   statusSoon: '#f57c00',
   statusClosed: '#c62828',
   statusOn: '#ffffff',
+  statusOnWarn: '#1a1a1a',
 
   noticeBg: '#3a2410',
   noticeBorder: '#8a5a1e',

@@ -1,6 +1,6 @@
 // iOS App Store state via the `asc` CLI (https://github.com/rorkariyam/App-Store-Connect-CLI — brew install asc).
-// The iOS store workflow moved here from fastlane/deliver; fastlane still owns Google Play
-// (see `fastlane/`).
+// The iOS store workflow moved here from fastlane/deliver, which cannot manage accessibility
+// declarations; fastlane still owns Google Play (see `fastlane/`).
 //
 //   npm run metadata:ios            # push everything (same command as before, asc-backed)
 //   npm run metadata:ios:dry-run    # read-only plan of what push would change
@@ -18,6 +18,35 @@ const SCREENSHOTS_DIR = 'store/ios/screenshots';
 const CREDS_PATH = 'store/ios/asc-api-key.json';
 const REVIEW_NOTES_PATH = 'store/ios/review-notes.md';
 const COPYRIGHT_PATH = 'store/ios/copyright.txt';
+
+// The Accessibility Nutrition Label. Apple's bar: users must be able to complete every common
+// task of the app using a declared feature — re-verify before flipping any of these.
+// Declared (verified Sep 2026):
+//   VoiceOver — labels/roles/hints throughout; Accessibility Inspector audit clean.
+//   Larger Text — Dynamic Type uncapped; verified no task-blocking truncation at AX sizes.
+//   Dark Interface — full dark palette, verified against the system setting.
+//   Differentiate Without Color Alone — statuses are text pills; map favourites differ by
+//     size and fill shape; WCAG ratios computed for every text pair.
+//   Sufficient Contrast — all text pairs ≥ 4.5:1 and icons ≥ 3:1 in both schemes
+//     (statusOnWarn + textFaint fixes exist for exactly this).
+//   Reduced Motion — callouts, controls, camera corrections, and image crossfades honour
+//     the system setting.
+// Not declared: Voice Control (works via labels but needs a device test to claim), Captions
+// and Audio Descriptions (no audio/video content — Apple's criteria say don't claim those).
+const A11Y = {
+  deviceFamilies: ['IPHONE', 'IPAD'],
+  claims: {
+    supportsVoiceover: true,
+    supportsLargerText: true,
+    supportsDarkInterface: true,
+    supportsDifferentiateWithoutColorAlone: true,
+    supportsVoiceControl: false,
+    supportsSufficientContrast: true,
+    supportsReducedMotion: true,
+    supportsCaptions: false,
+    supportsAudioDescriptions: false,
+  },
+};
 
 const CATEGORIES = { primary: 'LIFESTYLE', secondary: 'FOOD_AND_DRINK' };
 
@@ -78,6 +107,11 @@ const findVersion = (app) => {
     editable: found.attributes.appStoreState === EDITABLE_STATE,
   };
 };
+
+const a11yFlags = () =>
+  Object.entries(A11Y.claims)
+    .map(([k, v]) => [`--${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`, String(v)])
+    .flat();
 
 // ─── push steps ───────────────────────────────────────────────────────────
 
@@ -191,6 +225,53 @@ const pushReviewNotes = (ref) => {
   log('[review] notes updated');
 };
 
+const pushAccessibility = (app) => {
+  const driftedFamilies = () => {
+    const list = ascJson(['accessibility', 'list', '--app', app]).data;
+    return A11Y.deviceFamilies.filter((family) => {
+      const existing = list.find((d) => d.attributes.deviceFamily === family);
+      if (!existing) return true;
+      return Object.entries(A11Y.claims).some(([k, v]) => existing.attributes[k] !== v);
+    });
+  };
+
+  const drifted = driftedFamilies();
+  if (drifted.length === 0) {
+    log('[accessibility] declarations up to date and published');
+    return;
+  }
+  let failed = false;
+  for (const family of drifted) {
+    if (dryRun) {
+      log(`[accessibility] would create + publish declaration for ${family}`);
+      continue;
+    }
+    try {
+      const list = ascJson(['accessibility', 'list', '--app', app]).data;
+      const existing = list.find((d) => d.attributes.deviceFamily === family);
+      if (existing) {
+        asc(['accessibility', 'update', '--id', existing.id, ...a11yFlags()]);
+      } else {
+        asc(['accessibility', 'create', '--app', app, '--device-family', family, ...a11yFlags()]);
+      }
+      const id = ascJson(['accessibility', 'list', '--app', app]).data.find(
+        (d) => d.attributes.deviceFamily === family,
+      ).id;
+      asc(['accessibility', 'update', '--id', id, '--publish', 'true']);
+      log(`[accessibility] ${existing ? 'updated and published' : 'created and published'} declaration for ${family}`);
+    } catch (err) {
+      // A PUBLISHED declaration can refuse edits; Apple may want the change via the web UI or a
+      // delete + recreate. Never silently swallow: one family failing must not hide the other.
+      failed = true;
+      console.error(
+        `store-ios: [accessibility] ${family} failed — handle it in App Store Connect or delete ` +
+          `the declaration (asc accessibility delete --id <id> --confirm) and re-run. ${err.message}`,
+      );
+    }
+  }
+  if (failed) process.exitCode = 1;
+};
+
 // ─── commands ─────────────────────────────────────────────────────────────
 
 const cmd = process.argv[2];
@@ -211,5 +292,6 @@ if (cmd === 'pull') {
   if (want('screenshots')) pushScreenshots(appId, editable);
   if (want('categories')) pushCategories(appId, editable);
   if (want('review')) pushReviewNotes(ref);
+  if (want('accessibility')) pushAccessibility(appId);
   log(dryRun ? 'dry run complete — nothing written' : 'push complete');
 }

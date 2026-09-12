@@ -39,7 +39,8 @@ export function Segmented<T extends string>({ options, value, onChange }: Segmen
             <Text
               variant={selected ? 'callout' : 'subhead'}
               tone={selected ? 'default' : 'muted'}
-              numberOfLines={1}
+              // Wraps at accessibility text sizes; short labels never wrap at standard sizes.
+              style={styles.label}
             >
               {option.label}
             </Text>
@@ -64,5 +65,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     borderRadius: radius.pill - 2,
   },
+  label: { textAlign: 'center' },
   disabled: { opacity: 0.4 },
 });

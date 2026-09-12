@@ -66,7 +66,7 @@ export default function AboutScreen() {
         />
       </SettingsSection>
 
-      <Text variant="footnote" tone="faint" style={styles.disclaimer}>
+      <Text variant="footnote" tone="muted" style={styles.disclaimer}>
         {t('govDisclaimer')}
       </Text>
     </ScrollView>
