@@ -78,7 +78,7 @@ export default function MyPasarsScreen() {
         // button and a repeat of the footer only made the list end look like a web page.
         ListFooterComponent={
           data.length > 0 ? (
-            <Text variant="footnote" tone="faint" style={styles.hint}>
+            <Text variant="footnote" tone="muted" style={styles.hint}>
               {t('swipeDelete')}
             </Text>
           ) : null

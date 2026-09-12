@@ -21,10 +21,18 @@ const COPYRIGHT_PATH = 'store/ios/copyright.txt';
 
 // The Accessibility Nutrition Label. Apple's bar: users must be able to complete every common
 // task of the app using a declared feature — re-verify before flipping any of these.
-// Declared (verified Sep 2026): VoiceOver, Larger Text (Dynamic Type uncapped, compact
-// hierarchy past COMPACT_FONT_SCALE), Dark Interface, Differentiate Without Color Alone.
-// Not declared: Voice Control, Sufficient Contrast, Reduced Motion (unaudited); Captions and
-// Audio Descriptions (no audio/video content — Apple's criteria say don't claim those).
+// Declared (verified Sep 2026):
+//   VoiceOver — labels/roles/hints throughout; Accessibility Inspector audit clean.
+//   Larger Text — Dynamic Type uncapped; verified no task-blocking truncation at AX sizes.
+//   Dark Interface — full dark palette, verified against the system setting.
+//   Differentiate Without Color Alone — statuses are text pills; map favourites differ by
+//     size and fill shape; WCAG ratios computed for every text pair.
+//   Sufficient Contrast — all text pairs ≥ 4.5:1 and icons ≥ 3:1 in both schemes
+//     (statusOnWarn + textFaint fixes exist for exactly this).
+//   Reduced Motion — callouts, controls, camera corrections, and image crossfades honour
+//     the system setting.
+// Not declared: Voice Control (works via labels but needs a device test to claim), Captions
+// and Audio Descriptions (no audio/video content — Apple's criteria say don't claim those).
 const A11Y = {
   deviceFamilies: ['IPHONE', 'IPAD'],
   claims: {
@@ -33,8 +41,8 @@ const A11Y = {
     supportsDarkInterface: true,
     supportsDifferentiateWithoutColorAlone: true,
     supportsVoiceControl: false,
-    supportsSufficientContrast: false,
-    supportsReducedMotion: false,
+    supportsSufficientContrast: true,
+    supportsReducedMotion: true,
     supportsCaptions: false,
     supportsAudioDescriptions: false,
   },
