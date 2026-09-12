@@ -50,12 +50,12 @@ yarn-error.*
 .playwright-mcp/
 .claude/
 
-# fastlane — credentials and generated reports
+# fastlane — credentials and generated reports (Android only; iOS store state lives in store/ios via the asc CLI)
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/play-service-account.json
-fastlane/asc-api-key.json
 fastlane/README.md
+store/ios/asc-api-key.json
 
 # lib/ here is source, not build output — some global ignore files exclude it by convention
 !/lib/

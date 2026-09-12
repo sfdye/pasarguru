@@ -1,4 +1,3 @@
-app_identifier("com.sfdye.pasarguru") # iOS bundle identifier
-package_name("com.sfdye.pasarguru")   # Android package name
+package_name("com.sfdye.pasarguru") # Android package name
 
 json_key_file("fastlane/play-service-account.json")
