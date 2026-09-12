@@ -107,7 +107,7 @@ export default function MarketDetailScreen() {
         <StatusBanner status={status} tone={tone} nextOpen={nextOpen} hoursDisplay={hoursDisplay} marketName={market.name} />
 
         {status.status !== 'closed' && (
-          <Text variant="footnote" tone="faint" style={styles.hoursNote}>
+          <Text variant="footnote" tone="muted" style={styles.hoursNote}>
             {todayHoursLabel
               ? t('hoursNote')
               : status.status === 'warning'

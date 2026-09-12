@@ -7,7 +7,7 @@ import {
   UserLocation,
   type StyleSpecification,
 } from '@maplibre/maplibre-react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import ConstrainedCamera, { type ConstrainedCameraRef } from './ConstrainedCamera';
 import MapAttribution from './MapAttribution';
 import MapCallout from './MapCallout';
@@ -63,6 +63,7 @@ configureMapLogging();
 export default function MarketMap({ markets }: { markets: Market[] }) {
   const theme = useTheme();
   const t = useT();
+  const reduced = useReducedMotion();
   const favorites = useFavorites();
   const { coords, status, request } = useLocation();
   const coordsRef = useRef(coords);
@@ -249,7 +250,11 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
       </Map>
 
       {!selected && (
-        <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.controlWrap}>
+        <Animated.View
+          entering={reduced ? undefined : FadeIn}
+          exiting={reduced ? undefined : FadeOut}
+          style={styles.controlWrap}
+        >
           <Pressable
             onPress={locate}
             accessibilityRole="button"

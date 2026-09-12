@@ -15,6 +15,15 @@ const FILL: Record<DisplayTone, 'statusOpen' | 'statusWarn' | 'statusSoon' | 'st
   closed: 'statusClosed',
 };
 
+// Mirrors StatusPill: the bright warn/soon fills take dark text (`statusOnWarn`); open/closed
+// keep white. One variable feeds every Text in the banner.
+const LABEL_TONE: Record<DisplayTone, 'onStatus' | 'onStatusWarn'> = {
+  open: 'onStatus',
+  warning: 'onStatusWarn',
+  soon: 'onStatusWarn',
+  closed: 'onStatus',
+};
+
 /** The one thing the detail screen has to answer: is it open today, and if not, why. */
 export default function StatusBanner({
   status,
@@ -35,6 +44,7 @@ export default function StatusBanner({
 
   const reason = reasonText(status, t);
   const label = statusLabel(tone, t, hoursDisplay);
+  const labelTone = LABEL_TONE[tone];
 
   const DAY_KEY_TO_DOW: Record<string, number> = {
     sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6,
@@ -60,16 +70,16 @@ export default function StatusBanner({
 
   return (
     <View style={[styles.banner, { backgroundColor: theme.colors[FILL[tone]] }]}>
-      <Text variant="title" tone="onStatus" style={styles.centered}>
+      <Text variant="title" tone={labelTone} style={styles.centered}>
         {label}
       </Text>
       {!!subtitle && (
-        <Text variant="subhead" tone="onStatus" style={[styles.centered, styles.dim]}>
+        <Text variant="subhead" tone={labelTone} style={styles.centered}>
           {subtitle}
         </Text>
       )}
       {!!reason && !subtitle && (
-        <Text variant="subhead" tone="onStatus" style={styles.centered}>
+        <Text variant="subhead" tone={labelTone} style={styles.centered}>
           {reason}
         </Text>
       )}
@@ -80,7 +90,7 @@ export default function StatusBanner({
         const dayStr = DOW_SHORT[lang][nextOpen.getDay()];
         const dateStr = formatDate(nextOpen, lang);
         return (
-          <Text variant="subhead" tone="onStatus" style={[styles.centered, styles.dim]}>
+          <Text variant="subhead" tone={labelTone} style={styles.centered}>
             {t('opensAgain', { time: timeStr ?? '', day: dayStr, date: dateStr })}
           </Text>
         );
@@ -92,5 +102,4 @@ export default function StatusBanner({
 const styles = StyleSheet.create({
   banner: { gap: space.xs, padding: space.lg, borderRadius: radius.banner },
   centered: { textAlign: 'center' },
-  dim: { opacity: 0.9 },
 });
