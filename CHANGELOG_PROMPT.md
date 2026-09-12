@@ -18,13 +18,13 @@ Run this after each `npm run release`. Generates the internal changelog and exte
 
 9. Rewrite the commits as non-technical, user-facing sentences. No PR numbers, no commit hashes, no jargon. Plain bulleted list (no grouping headings).
 10. Write in English and translate to Simplified Chinese.
-11. **iOS** — overwrite both files (replaces wholesale each release):
-    - `fastlane/metadata/en-US/release_notes.txt`
-    - `fastlane/metadata/zh-Hans/release_notes.txt`
+11. **iOS** — overwrite the `whatsNew` field in both files (replaces wholesale each release):
+    - `store/ios/metadata/version/<version>/en-US.json`
+    - `store/ios/metadata/version/<version>/zh-Hans.json`
 12. **Android** — write per-build files named `<versionCode>.txt` (the number from step 4):
     - `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`
     - `fastlane/metadata/android/zh-CN/changelogs/<versionCode>.txt`
 
 ## After generation
 
-13. Show the diffs for `CHANGELOG.md` and the four fastlane files. Ask for confirmation before committing.
+13. Show the diffs for `CHANGELOG.md` and the four store-metadata files. Ask for confirmation before committing.

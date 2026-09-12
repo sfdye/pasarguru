@@ -1,1 +1,0 @@
-Polished the Simplified Chinese interface — more accurate, idiomatic wording, and fixed the Chinese names of several pasars.
