@@ -1,4 +1,4 @@
-// iOS App Store state via the `asc` CLI (https://github.com/rorkariyam/App-Store-Connect-CLI — brew install asc).
+// iOS App Store state via the `asc` CLI (https://github.com/rorkai/App-Store-Connect-CLI — brew install asc).
 // The iOS store workflow moved here from fastlane/deliver, which cannot manage accessibility
 // declarations; fastlane still owns Google Play (see `fastlane/`).
 //
