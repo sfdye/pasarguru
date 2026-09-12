@@ -1,4 +1,4 @@
-// iOS App Store state via the `asc` CLI (https://github.com/rorkariyam/App-Store-Connect-CLI — brew install asc).
+// iOS App Store state via the `asc` CLI (https://github.com/rorkai/App-Store-Connect-CLI — brew install asc).
 // The iOS store workflow moved here from fastlane/deliver; fastlane still owns Google Play
 // (see `fastlane/`).
 //
@@ -53,7 +53,15 @@ const env = {
   ASC_TELEMETRY_DISABLED: '1',
 };
 
-const asc = (args) => execFileSync('asc', args, { env, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+// execFileSync throws a bare Error whose stderr hides asc's actual message; surface it the way
+// every other failure in this script dies.
+const asc = (args) => {
+  try {
+    return execFileSync('asc', args, { env, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+  } catch (err) {
+    die(`asc ${args[0]} ${args[1] ?? ''}failed:\n${err.stderr || err.message}`);
+  }
+};
 const ascJson = (args) => JSON.parse(asc([...args, '--output', 'json']));
 
 const appJson = JSON.parse(readFileSync('app.json', 'utf8'));
@@ -99,6 +107,10 @@ const ensureVersion = (app) => {
 
 const syncCopyright = (app, ref) => {
   if (!ref) return;
+  if (!ref.editable) {
+    log('[copyright] version not editable — skipped (applies at the next release)');
+    return;
+  }
   const copyright = readTrimmed(COPYRIGHT_PATH);
   if (ref.copyright === copyright) {
     log(`[copyright] up to date ("${copyright}")`);
@@ -114,7 +126,7 @@ const syncCopyright = (app, ref) => {
 
 const pushMetadata = (app, editable) => {
   if (!editable) {
-    log(`[metadata] version ${version} is ${'not editable'} — skipped (applies at the next release)`);
+    log(`[metadata] version ${version} is not editable — skipped (applies at the next release)`);
     return;
   }
   const args = ['metadata', 'push', '--app', app, '--version', version, '--dir', METADATA_DIR];
@@ -168,7 +180,10 @@ const pushCategories = (app, editable) => {
 };
 
 const pushReviewNotes = (ref) => {
-  if (!ref) return;
+  if (!ref) {
+    log('[review] version does not exist yet — its review detail is created with it; notes apply after creation');
+    return;
+  }
   if (!ref.editable) {
     log('[review] version not editable — skipped (applies at the next release)');
     return;
