@@ -122,6 +122,19 @@ One number set by hand instead of `autoIncrement`, which bumps each platform in 
 
 TestFlight needs a paid Apple Developer account; the certificate a local `expo run:ios` uses is development-only and expires. EAS stores signing credentials on its servers rather than on disk, so none of it belongs in this repo — and because the repo is public, leave `appleId` out of `eas.json` and let `eas submit` prompt, or pass `EXPO_APPLE_ID`.
 
+## Store listings
+
+Store listing state (text, screenshots, categories) lives in the repo and is pushed without a binary. iOS goes through the [`asc` CLI](https://github.com/rorkai/App-Store-Connect-CLI) (`brew install asc`); Android stays on fastlane `supply`. iOS listing content is in `store/ios/`, Android in `fastlane/metadata/android/`.
+
+```sh
+npm run metadata:ios            # push iOS listing via asc (dry-run first with metadata:ios:dry-run)
+npm run metadata:pull:ios       # re-sync iOS text after App Store Connect dashboard edits
+npm run metadata:android        # push Play listing via fastlane supply
+npm run metadata:pull:android   # re-sync Play text after Play Console edits
+```
+
+Pull before a push if you edited anything in a dashboard, or the push will overwrite those manual changes.
+
 ## Over-the-air updates
 
 JS and asset changes — a translation fix, a market-name correction in `zh-names.ts`, a closure-logic quirk in `normalizeMarkets` — ship without a store release via EAS Update. `expo-updates` is baked into the binary, `app.json` sets a `runtimeVersion` policy of `appVersion` (an update targets the current `version`, so it reaches every install of that store release), and the `production` EAS profile carries `channel: "production"`, which the `apk` profile inherits through `extends`. The first build that contains `expo-updates` still goes through the stores — a binary without the module can never receive an OTA, so the build already in TestFlight/Play is unreachable until users install the release that adds it.

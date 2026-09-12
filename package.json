@@ -53,9 +53,10 @@
     "screenshots:android": "maestro test --platform android --include-tags=screenshots,screenshots-zh -e APP_ID=com.sfdye.pasarguru.dev e2e/screenshots",
     "screenshots:copy": "sh scripts/copy-screenshots.sh",
     "screenshots:resize:ios": "sh scripts/resize-ios-screenshots.sh",
-    "metadata:ios": "npm run screenshots:resize:ios && FASTLANE_ENABLE_BETA_DELIVER_SYNC_SCREENSHOTS=1 fastlane ios metadata",
+    "metadata:ios": "npm run screenshots:resize:ios && node scripts/store-ios.mjs push",
+    "metadata:ios:dry-run": "node scripts/store-ios.mjs push --dry-run",
     "metadata:android": "fastlane android metadata",
-    "metadata:pull:ios": "fastlane deliver download_metadata --force",
+    "metadata:pull:ios": "node scripts/store-ios.mjs pull",
     "metadata:pull:android": "fastlane supply init",
     "icons": "python3 brand/make_icons.py",
     "release": "node scripts/release.mjs"
