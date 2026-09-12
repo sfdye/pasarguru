@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useReducedMotion } from 'react-native-reanimated';
 import StatusPill from './StatusPill';
 // Pressable comes from the wrapper, not react-native — see its export.
 import SwipeToDeleteRow, { Pressable } from './SwipeToDeleteRow';
@@ -29,6 +30,7 @@ function MarketRowInner({ name }: { name: string }) {
   const lang = useLang();
   const t = useT();
   const { fontScale } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
 
   // A market can vanish from the NEA dataset between refreshes; the store prunes it, so this is
   // only the render in between.
@@ -75,7 +77,7 @@ function MarketRowInner({ name }: { name: string }) {
               style={[styles.thumb, { backgroundColor: theme.colors.borderLight }]}
               contentFit="cover"
               cachePolicy="memory-disk"
-              transition={150}
+              transition={reducedMotion ? 0 : 150}
               accessible={false}
             />
           )}

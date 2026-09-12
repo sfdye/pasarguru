@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Icon, Text } from './ui';
 import { parseMarketName } from '../lib/core/market-logic';
 import { sgMinutes } from '../lib/core/market-hours';
@@ -36,6 +37,7 @@ function DiscoverRowInner({
   const theme = useTheme();
   const t = useT();
   const today = useToday();
+  const reducedMotion = useReducedMotion();
 
   const parsed = parseMarketName(market.name);
   const displayName = getDisplayName(parsed, lang);
@@ -63,15 +65,15 @@ function DiscoverRowInner({
         style={[styles.thumb, { backgroundColor: theme.colors.borderLight }]}
         contentFit="cover"
         cachePolicy="memory-disk"
-        transition={150}
+        transition={reducedMotion ? 0 : 150}
         accessible={false}
       />
       <View style={styles.info}>
-        <Text variant="headline" numberOfLines={1}>
+        <Text variant="headline" numberOfLines={2}>
           {displayName}
         </Text>
         {!!parsed.street && (
-          <Text variant="subhead" tone="muted" numberOfLines={1}>
+          <Text variant="subhead" tone="muted" numberOfLines={2}>
             {parsed.street}
           </Text>
         )}

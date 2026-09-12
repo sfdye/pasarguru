@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOutDown, useReducedMotion } from 'react-native-reanimated';
 import StatusPill from './StatusPill';
 import { Button, Icon, Text } from './ui';
 import { getMarketStatus, parseMarketName, type Market } from '../lib/core/market-logic';
@@ -25,14 +25,16 @@ export default function MapCallout({
   const today = useToday();
   const t = useT();
   const favorite = useIsFavorite(market.name);
+  // Reduced Motion: appear/disappear without the slide.
+  const reduced = useReducedMotion();
 
   const displayName = getDisplayName(parseMarketName(market.name), lang);
   const tone = statusTone(getMarketStatus(market, today));
 
   return (
     <Animated.View
-      entering={FadeInDown}
-      exiting={FadeOutDown}
+      entering={reduced ? undefined : FadeInDown}
+      exiting={reduced ? undefined : FadeOutDown}
       // No safe-area or tab-bar maths: the tab bar is a layout sibling of the screen, so the map
       // view already ends above it and above the home indicator.
       style={[styles.card, { backgroundColor: theme.colors.surface }, theme.shadow]}

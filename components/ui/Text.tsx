@@ -1,7 +1,7 @@
 import { Platform, Text as RNText, type TextProps as RNTextProps } from 'react-native';
 import { type Palette, type TypeVariant, typeScale, useTheme } from '../../lib/theme';
 
-type Tone = 'default' | 'muted' | 'faint' | 'accent' | 'danger' | 'warning' | 'onStatus';
+type Tone = 'default' | 'muted' | 'faint' | 'accent' | 'danger' | 'warning' | 'onStatus' | 'onStatusWarn';
 
 const TONE_KEY: Record<Tone, keyof Palette> = {
   default: 'text',
@@ -11,6 +11,7 @@ const TONE_KEY: Record<Tone, keyof Palette> = {
   danger: 'danger',
   warning: 'statusSoon',
   onStatus: 'statusOn',
+  onStatusWarn: 'statusOnWarn',
 };
 
 /**

@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useReducedMotion } from 'react-native-reanimated';
 import { Text } from './ui';
 import { parseMarketName } from '../lib/core/market-logic';
 import { sgMinutes } from '../lib/core/market-hours';
@@ -12,7 +13,7 @@ import { statusLabel } from '../lib/status';
 import { formatDistance, getDisplayName, getMarketDistance } from '../lib/markets';
 import { useT, useToday } from '../lib/store';
 import type { Coords } from '../lib/useLocation';
-import { radius, space, useTheme } from '../lib/theme';
+import { COMPACT_FONT_SCALE, radius, space, useTheme } from '../lib/theme';
 
 const CARD_W = 200;
 const CARD_W_FEATURED = 240;
@@ -40,6 +41,8 @@ function PhotoCardInner({
   const theme = useTheme();
   const t = useT();
   const today = useToday();
+  const { fontScale } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
 
   const parsed = parseMarketName(market.name);
   const displayName = getDisplayName(parsed, lang);
@@ -68,14 +71,14 @@ function PhotoCardInner({
         style={[styles.image, { width: cardW, backgroundColor: theme.colors.borderLight }]}
         contentFit="cover"
         cachePolicy="memory-disk"
-        transition={150}
+        transition={reducedMotion ? 0 : 150}
         accessible={false}
       />
       <View style={styles.body}>
-        <Text variant="bodyStrong" numberOfLines={1}>
-          {displayName}
-        </Text>
-        {blurb && (
+        <Text variant="bodyStrong">{displayName}</Text>
+        {/* The blurb is the first thing to go at accessibility sizes — the name needs the room,
+            and the full text is on the detail screen (and in this card's VoiceOver label). */}
+        {blurb && fontScale <= COMPACT_FONT_SCALE && (
           <Text variant="footnote" tone="muted" numberOfLines={2}>
             {blurb}
           </Text>

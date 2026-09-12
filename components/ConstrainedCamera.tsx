@@ -5,6 +5,7 @@ import {
   type CameraRef,
   type ViewState,
 } from '@maplibre/maplibre-react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { centerLimit, clampCenter, sameBounds, type Bounds } from '../lib/core/map-bounds';
 
 /** Long enough to read as a correction rather than a jump, short enough not to fight a drag. */
@@ -33,6 +34,8 @@ export default function ConstrainedCamera({ limit, ref, ...cameraProps }: Props)
   const camera = useRef<CameraRef>(null);
   // Starts at the full box: until the map reports a viewport there is nothing to inset it by.
   const [centerBounds, setCenterBounds] = useState<Bounds>(limit);
+  // Reduced Motion: corrections snap instead of easing across the viewport.
+  const reducedMotion = useReducedMotion();
 
   useImperativeHandle(
     ref,
@@ -48,10 +51,10 @@ export default function ConstrainedCamera({ limit, ref, ...cameraProps }: Props)
         // Only a zoom changes the span, and zooming out near an edge lands the centre outside the
         // tightened box — which the native clamp will not undo, it only refuses the next move.
         const corrected = clampCenter(center, inset);
-        if (corrected) camera.current?.easeTo({ center: corrected, duration: RECENTER_MS });
+        if (corrected) camera.current?.easeTo({ center: corrected, duration: reducedMotion ? 0 : RECENTER_MS });
       },
     }),
-    [limit],
+    [limit, reducedMotion],
   );
 
   return <Camera ref={camera} {...cameraProps} maxBounds={centerBounds} />;
