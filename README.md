@@ -27,6 +27,8 @@ Most stalls at Singapore wet markets rest on Mondays, and markets have quarterly
 
 [Dates of Hawker Centre Closure](https://data.gov.sg/datasets/d_bda4baa634dd1cc7a6c7cad5f19e2d68/view) from the NEA via data.gov.sg. There is no backend of any kind: the app fetches that dataset directly and does everything else on device.
 
+We still use the legacy CKAN-style `datastore_search` endpoint rather than the newer [Dataset Download API](https://guide.data.gov.sg/developer-guide/dataset-apis/download-dataset), and that's fine — the endpoint survived data.gov.sg's 2023 rewrite as a backwards-compat shim and is still maintained. The dataset is one small table and the app fetches it about once a day, so the new API's async initiate/poll dance and its anonymous 5 req/min limit buy us nothing; one synchronous call returning JSON rows is all we need. If it's ever retired, `fetchMarketsFromAPI` falls back to the offline cache.
+
 ## Layout
 
 ```
