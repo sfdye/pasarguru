@@ -29,10 +29,10 @@ const COPYRIGHT_PATH = 'store/ios/copyright.txt';
 //     size and fill shape; WCAG ratios computed for every text pair.
 //   Sufficient Contrast — all text pairs ≥ 4.5:1 and icons ≥ 3:1 in both schemes
 //     (statusOnWarn + textFaint fixes exist for exactly this).
-//   Reduced Motion — callouts, controls, camera corrections, and image crossfades honour
-//     the system setting.
-// Not declared: Voice Control (works via labels but needs a device test to claim), Captions
-// and Audio Descriptions (no audio/video content — Apple's criteria say don't claim those).
+// Not declared: Voice Control (works via labels but needs a device test to claim), Reduced
+// Motion (animations are short fades that don't block tasks — not honoured, so not claimed),
+// Captions and Audio Descriptions (no audio/video content — Apple's criteria say don't claim
+// those).
 const A11Y = {
   deviceFamilies: ['IPHONE', 'IPAD'],
   claims: {
@@ -42,7 +42,7 @@ const A11Y = {
     supportsDifferentiateWithoutColorAlone: true,
     supportsVoiceControl: false,
     supportsSufficientContrast: true,
-    supportsReducedMotion: true,
+    supportsReducedMotion: false,
     supportsCaptions: false,
     supportsAudioDescriptions: false,
   },
