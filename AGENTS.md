@@ -47,7 +47,7 @@ Those two are the whole of CI (`.github/workflows/test.yml`); there is no lint s
 - Branch config on `APP_VARIANT`, never `EAS_BUILD_PROFILE` — a local `expo run:ios` doesn't set the latter and would silently take the production branch.
 - A Debug build embeds no JS (`SKIP_BUNDLING=1`) and is dead without Metro. `APP_VARIANT=development npx expo run:ios --configuration Release` gives a standalone dev app with no new EAS profile. Judge performance only on Release builds.
 - `distribution: internal` ad-hoc signs for registered UDIDs; `production` provisions no devices and is TestFlight-only, not sideloadable.
-- Every icon raster in `assets/` is **generated**: `npm run icons` derives them from `brand/` (Pillow + librsvg, hand-run). Edit the master in `brand/`, never the output. The 96px notification glyph is the exception — a hand-drawn SVG. `onemap-logo.png` and `app-store-badge.svg` are third-party compliance/licence artwork (OneMap, Apple), not generated.
+- Every icon raster in `assets/` is **generated**: `npm run icons` derives them from `brand/` (Pillow + librsvg, hand-run). Edit the master in `brand/`, never the output. The 96px notification glyph is the exception — a hand-drawn SVG. `onemap-logo.png`, `app-store-badge.svg` and `google-play-badge.png` are third-party compliance/licence artwork (OneMap, Apple, Google), not generated. Both store badges are deliberately tweaked from the official downloads (App Store SVG intrinsic size doubled for GitHub's shrink-only image sizing; Play PNG margin cropped) — don't restore them.
 
 ## Store metadata (asc for iOS, fastlane for Android)
 

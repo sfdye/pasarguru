@@ -4,7 +4,8 @@
 
 Discover Singapore's hawker centres and wet markets — find one near you, check if it's open, and get a heads-up before it closes. iOS and Android, built with Expo.
 
-[<img src="assets/app-store-badge.svg" alt="Download on the App Store" height="40">](https://apps.apple.com/sg/app/pasarguru/id6805917144)
+[<img src="assets/app-store-badge.svg" alt="Download on the App Store" height="48">](https://apps.apple.com/sg/app/pasarguru/id6805917144)
+[<img src="assets/google-play-badge.png" alt="Get it on Google Play" height="48">](https://play.google.com/store/apps/details?id=com.sfdye.pasarguru)
 
 ## Why
 
