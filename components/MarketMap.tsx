@@ -95,22 +95,23 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
     return { type: 'FeatureCollection', features };
   }, [markets, favorites]);
 
-  // Set when "locate me" is tapped before a fix exists, so the camera moves as soon as one lands.
-  // Also armed on a first-ever visit (no saved view) so the map defaults to the user's location.
-  const awaitingFix = useRef(false);
+  // Set when "locate me" is tapped before the user's location is known, so the camera moves as
+  // soon as it arrives. Also armed on a first-ever visit (no saved view) so the map defaults to
+  // the user's location.
+  const awaitingLocation = useRef(false);
   useEffect(() => {
-    if (!savedView && !coords) awaitingFix.current = true;
+    if (!savedView && !coords) awaitingLocation.current = true;
   }, []);
-  // Only a fix we were waiting for moves the camera or writes the saved view; background refreshes
-  // of the shared snapshot must not clobber either (the camera is where the user left it).
+  // Only a location we were waiting for moves the camera or writes the saved view; background
+  // refreshes of the shared snapshot must not clobber either (the camera is where the user left it).
   useEffect(() => {
-    if (!coords || !awaitingFix.current) return;
+    if (!coords || !awaitingLocation.current) return;
     const view: MapView = {
       center: [coords.lng, coords.lat],
       zoom: LOCATED_ZOOM,
     };
     persistView(view);
-    awaitingFix.current = false;
+    awaitingLocation.current = false;
     camera.current?.easeTo(view);
   }, [coords]);
   useEffect(() => {
@@ -164,13 +165,13 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
     acquireFresh();
   };
 
-  // No fix yet: permission flow plus a fresh acquisition, with the camera easing as soon as a new
-  // fix lands; if the acquisition returns the fix we already had, stop waiting.
+  // No location yet: permission flow plus a fresh acquisition, with the camera easing as soon as a
+  // new one arrives; if the acquisition returns the location we already had, stop waiting.
   const acquireFresh = () => {
-    awaitingFix.current = true;
+    awaitingLocation.current = true;
     const before = coordsRef.current;
     void request({ fresh: true }).then(() => {
-      if (coordsRef.current === before) awaitingFix.current = false;
+      if (coordsRef.current === before) awaitingLocation.current = false;
     });
   };
 
@@ -274,7 +275,7 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
           />
         </GeoJSONSource>
 
-        {/* Only rendered once a fix exists, which also means permission was granted. */}
+        {/* Only rendered once a location exists, which also means permission was granted. */}
         {!!coords && <UserLocation />}
       </Map>
 
