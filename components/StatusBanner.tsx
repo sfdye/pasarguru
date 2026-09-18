@@ -79,11 +79,14 @@ export default function StatusBanner({
         // A reopen day whose hours say "Closed" contradicts NEA — no time worth showing.
         if (openTime && /^closed$/i.test(openTime)) return null;
         const timeStr = openTime ? openTime.split(/[–-]/)[0]?.trim() : null;
-        const dayStr = DOW_SHORT[lang][nextOpen.getDay()];
+        // Always name the date, not just the weekday — a reopen months out reads as
+        // this week otherwise. formatDate already carries the weekday.
         const dateStr = formatDate(nextOpen, lang);
         return (
           <Text variant="subhead" tone="onStatus" style={[styles.centered, styles.dim]}>
-            {t('opensAgain', { time: timeStr ?? '', day: dayStr, date: dateStr })}
+            {timeStr
+              ? t('opensAgain', { time: timeStr, date: dateStr })
+              : t('opensAgainDate', { date: dateStr })}
           </Text>
         );
       })()}
