@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import * as Location from 'expo-location';
 
-/** Matches the web app's `maximumAge: 300000` — a five-minute-old fix is good enough here. */
+/** Matches the web app's `maximumAge: 300000` — a five-minute-old location is good enough here. */
 const MAX_AGE_MS = 5 * 60 * 1000;
 
 export interface Coords {
@@ -9,10 +9,10 @@ export interface Coords {
   lng: number;
 }
 
-/** Permission, not fix: `granted` with `coords === null` just means no fix arrived yet. */
+/** Permission, not coordinates: `granted` with `coords === null` just means no location yet. */
 export type LocationStatus = 'idle' | 'requesting' | 'granted' | 'denied';
 
-// The fix lives in a module, not in a component: the map tab and the add modal both want it,
+// The location lives in a module, not in a component: the map tab and the add modal both want it,
 // and mounting either one again must not re-prompt or re-locate.
 let snapshot: { coords: Coords | null; status: LocationStatus } = { coords: null, status: 'idle' };
 let inflight: Promise<void> | null = null;
@@ -38,7 +38,7 @@ function acquire(options?: { fresh?: boolean }): Promise<void> {
         set({ status: 'denied' });
         return;
       }
-      // A user-initiated "locate me" wants the current position, not a stale last-known fix
+      // A user-initiated "locate me" wants the current position, not a stale last-known location
       // that may predate a physical move. The 5-minute cache stays for background acquisition.
       const last = options?.fresh
         ? null
@@ -51,7 +51,7 @@ function acquire(options?: { fresh?: boolean }): Promise<void> {
         coords: { lat: position.coords.latitude, lng: position.coords.longitude },
       });
     } catch {
-      // Permission is granted but no fix is available; callers order alphabetically instead.
+      // Permission is granted but no location is available; callers order alphabetically instead.
       set({ status: snapshot.status === 'requesting' ? 'granted' : snapshot.status });
     } finally {
       inflight = null;

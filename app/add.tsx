@@ -25,8 +25,8 @@ export default function AddMarketsScreen() {
   const deferredQuery = useDeferredValue(query);
   const [chosenSort, setChosenSort] = useState<Sort | null>(null);
 
-  // Distance until the user says otherwise, and only while there is a fix to measure from — so a
-  // location arriving late reorders the list, and a denied one never leaves the list stuck.
+  // Distance until the user says otherwise, and only while there is a location to measure from —
+  // so a location arriving late reorders the list, and a denied one never leaves the list stuck.
   const sort: Sort = coords ? (chosenSort ?? 'distance') : 'alpha';
 
   const rows = useMemo(() => {

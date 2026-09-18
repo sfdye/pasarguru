@@ -12,7 +12,7 @@ import type { Lang } from './market-logic.ts';
  * `Record<Lang, string>` per entry so a missing translation fails typecheck.
  *
  * OTA-updatable: this is plain JS, so `eas update` can refresh the list without a store build.
- * Order is the editorial ranking — the fallback when no location fix is available.
+ * Order is the editorial ranking — the fallback when no location is available.
  */
 export interface FamousPasar {
   /** Friendly name as it appears in the NEA dataset (after parseMarketName). */

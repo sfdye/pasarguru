@@ -3,6 +3,7 @@ import { AppState, Linking, Pressable, StyleSheet, View } from 'react-native';
 import {
   GeoJSONSource,
   Layer,
+  LocationManager,
   Map,
   UserLocation,
   type StyleSpecification,
@@ -94,26 +95,25 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
     return { type: 'FeatureCollection', features };
   }, [markets, favorites]);
 
-  // Set when "locate me" is tapped before a fix exists, so the camera moves as soon as one lands.
-  // Also armed on a first-ever visit (no saved view) so the map defaults to the user's location.
-  const awaitingFix = useRef(false);
+  // Set when "locate me" is tapped before the user's location is known, so the camera moves as
+  // soon as it arrives. Also armed on a first-ever visit (no saved view) so the map defaults to
+  // the user's location.
+  const awaitingLocation = useRef(false);
   useEffect(() => {
-    if (!savedView && !coords) awaitingFix.current = true;
+    if (!savedView && !coords) awaitingLocation.current = true;
   }, []);
+  // Only a location we were waiting for moves the camera or writes the saved view; background
+  // refreshes of the shared snapshot must not clobber either (the camera is where the user left it).
   useEffect(() => {
-    if (!coords || (savedView && !awaitingFix.current)) return;
+    if (!coords || !awaitingLocation.current) return;
     const view: MapView = {
       center: [coords.lng, coords.lat],
-      zoom: awaitingFix.current ? LOCATED_ZOOM : 14,
+      zoom: LOCATED_ZOOM,
     };
-    clearTimeout(saveTimer.current);
-    pendingUserView.current = null;
-    latestView.current = view;
-    saveMapView(view);
-    if (!awaitingFix.current) return;
-    awaitingFix.current = false;
+    persistView(view);
+    awaitingLocation.current = false;
     camera.current?.easeTo(view);
-  }, [coords, savedView]);
+  }, [coords]);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next) => {
       if (next === 'active') return;
@@ -129,18 +129,49 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
     };
   }, []);
 
+  const persistView = (view: MapView) => {
+    clearTimeout(saveTimer.current);
+    pendingUserView.current = null;
+    latestView.current = view;
+    saveMapView(view);
+  };
+
   const locate = () => {
     if (!coords && status === 'denied') {
       void Linking.openSettings();
       return;
     }
-    // The puck (MapLibre <UserLocation>) tracks the device continuously; `coords` from
-    // useLocation is a one-shot fix that goes stale. Always re-acquire on tap so the camera
-    // heads to where the blue dot actually is, not where it was at app start.
-    awaitingFix.current = true;
+    // The puck (MapLibre <UserLocation>) tracks the device continuously, so while it is mounted
+    // its engine's last-known position is both current and instant. Going through expo-location
+    // instead reads as dead lag on the button: a fresh `getCurrentPositionAsync` waits seconds on
+    // Android for the fused provider. The background re-acquire only refreshes the shared snapshot
+    // (callout distances, Discover sorting) off the critical path.
+    if (coords) {
+      void LocationManager.getCurrentPosition().then((position) => {
+        if (!position) {
+          acquireFresh();
+          return;
+        }
+        const view: MapView = {
+          center: [position.coords.longitude, position.coords.latitude],
+          zoom: LOCATED_ZOOM,
+        };
+        persistView(view);
+        camera.current?.easeTo(view);
+        void request({ fresh: true });
+      });
+      return;
+    }
+    acquireFresh();
+  };
+
+  // No location yet: permission flow plus a fresh acquisition, with the camera easing as soon as a
+  // new one arrives; if the acquisition returns the location we already had, stop waiting.
+  const acquireFresh = () => {
+    awaitingLocation.current = true;
     const before = coordsRef.current;
     void request({ fresh: true }).then(() => {
-      if (coordsRef.current === before) awaitingFix.current = false;
+      if (coordsRef.current === before) awaitingLocation.current = false;
     });
   };
 
@@ -244,7 +275,7 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
           />
         </GeoJSONSource>
 
-        {/* Only rendered once a fix exists, which also means permission was granted. */}
+        {/* Only rendered once a location exists, which also means permission was granted. */}
         {!!coords && <UserLocation />}
       </Map>
 
