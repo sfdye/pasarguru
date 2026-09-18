@@ -3,6 +3,7 @@ import { AppState, Linking, Pressable, StyleSheet, View } from 'react-native';
 import {
   GeoJSONSource,
   Layer,
+  LocationManager,
   Map,
   UserLocation,
   type StyleSpecification,
@@ -100,20 +101,18 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
   useEffect(() => {
     if (!savedView && !coords) awaitingFix.current = true;
   }, []);
+  // Only a fix we were waiting for moves the camera or writes the saved view; background refreshes
+  // of the shared snapshot must not clobber either (the camera is where the user left it).
   useEffect(() => {
-    if (!coords || (savedView && !awaitingFix.current)) return;
+    if (!coords || !awaitingFix.current) return;
     const view: MapView = {
       center: [coords.lng, coords.lat],
-      zoom: awaitingFix.current ? LOCATED_ZOOM : 14,
+      zoom: LOCATED_ZOOM,
     };
-    clearTimeout(saveTimer.current);
-    pendingUserView.current = null;
-    latestView.current = view;
-    saveMapView(view);
-    if (!awaitingFix.current) return;
+    persistView(view);
     awaitingFix.current = false;
     camera.current?.easeTo(view);
-  }, [coords, savedView]);
+  }, [coords]);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (next) => {
       if (next === 'active') return;
@@ -129,14 +128,45 @@ export default function MarketMap({ markets }: { markets: Market[] }) {
     };
   }, []);
 
+  const persistView = (view: MapView) => {
+    clearTimeout(saveTimer.current);
+    pendingUserView.current = null;
+    latestView.current = view;
+    saveMapView(view);
+  };
+
   const locate = () => {
     if (!coords && status === 'denied') {
       void Linking.openSettings();
       return;
     }
-    // The puck (MapLibre <UserLocation>) tracks the device continuously; `coords` from
-    // useLocation is a one-shot fix that goes stale. Always re-acquire on tap so the camera
-    // heads to where the blue dot actually is, not where it was at app start.
+    // The puck (MapLibre <UserLocation>) tracks the device continuously, so while it is mounted
+    // its engine's last-known position is both current and instant. Going through expo-location
+    // instead reads as dead lag on the button: a fresh `getCurrentPositionAsync` waits seconds on
+    // Android for the fused provider. The background re-acquire only refreshes the shared snapshot
+    // (callout distances, Discover sorting) off the critical path.
+    if (coords) {
+      void LocationManager.getCurrentPosition().then((position) => {
+        if (!position) {
+          acquireFresh();
+          return;
+        }
+        const view: MapView = {
+          center: [position.coords.longitude, position.coords.latitude],
+          zoom: LOCATED_ZOOM,
+        };
+        persistView(view);
+        camera.current?.easeTo(view);
+        void request({ fresh: true });
+      });
+      return;
+    }
+    acquireFresh();
+  };
+
+  // No fix yet: permission flow plus a fresh acquisition, with the camera easing as soon as a new
+  // fix lands; if the acquisition returns the fix we already had, stop waiting.
+  const acquireFresh = () => {
     awaitingFix.current = true;
     const before = coordsRef.current;
     void request({ fresh: true }).then(() => {
