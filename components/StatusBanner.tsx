@@ -76,9 +76,11 @@ export default function StatusBanner({
       {!!nextOpen && tone === 'closed' && !subtitle && (() => {
         const hours = marketName ? getMarketHours(marketName) : null;
         const openTime = hours ? getTodayHoursLabel(hours, nextOpen.getDay()) : null;
-        // A reopen day whose hours say "Closed" contradicts NEA — no time worth showing.
-        if (openTime && /^closed$/i.test(openTime)) return null;
-        const timeStr = openTime ? openTime.split(/[–-]/)[0]?.trim() : null;
+        // "Closed" and "Open 24 hours" are states, not times — the date-only line covers them.
+        const timeStr =
+          openTime && !/^(closed|open 24 hours)$/i.test(openTime)
+            ? openTime.split(/[–-]/)[0]?.trim()
+            : null;
         // Always name the date, not just the weekday — a reopen months out reads as
         // this week otherwise. formatDate already carries the weekday.
         const dateStr = formatDate(nextOpen, lang);

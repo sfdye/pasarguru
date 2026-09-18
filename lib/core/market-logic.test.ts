@@ -310,6 +310,20 @@ describe('getDisplayClosures', () => {
     const d = closures[0].date;
     assert.equal(`${d.getDate()}/${d.getMonth() + 1}/2026`, '14/9/2026');
   });
+
+  test('fold extends the range when an adjacent same-reason window continues it', () => {
+    // q1 cleaning (Jan 5-7) touches q2 cleaning (Jan 8-10): the scan coalesces them, and
+    // the ongoing row must carry the true end, not just today's window end.
+    const marketAdjacent = {
+      ...market,
+      q2_cleaningstartdate: '8/1/2026',
+      q2_cleaningenddate: '10/1/2026',
+    };
+    const closures = getDisplayClosures(marketAdjacent, 10, new Date(2026, 0, 6));
+    assert.equal(closures.length, 1);
+    assert.equal(closures[0].date.getDate(), 5);
+    assert.equal(closures[0].endDate!.getDate(), 10);
+  });
 });
 
 describe('getNextOpenDate', () => {

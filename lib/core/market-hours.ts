@@ -365,7 +365,7 @@ export interface HoursDisplay {
   label: string | null;
   /** Formatted opening time when closed by hours, e.g. "7:00 am". Null otherwise. */
   opensAt: string | null;
-  /** Day-of-week key for the opening time ('mon', 'tue', etc). Null when opening today or no data. */
+  /** Day-of-week key for the opening time ('mon', 'tue', etc). Null when opening today or no opening within a week. */
   opensAtDay: DayKey | null;
   /** Formatted closing time when open, e.g. "10:00 pm". Null otherwise. */
   closesAt: string | null;
@@ -439,7 +439,9 @@ export function resolveHoursDisplay(
     return { kind: 'open', label, opensAt: null, opensAtDay: null, closesAt };
   }
 
-  const opensAtInfo = getOpensAtInfo(hours, dayOfWeek, minutes);
+  // Past today's close with tomorrow "Closed", "Open 24 hours" or absent: getOpensAtInfo
+  // stops at tomorrow, so scan the week for the real next opening.
+  const opensAtInfo = getOpensAtInfo(hours, dayOfWeek, minutes) ?? nextOpenDay(hours, dayOfWeek);
   if (opensAtInfo) {
     const minsUntil = minutesUntilOpen(hours, dayOfWeek, minutes);
     if (minsUntil !== null && minsUntil <= 60) {

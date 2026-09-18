@@ -173,6 +173,9 @@ export function getDisplayClosures(market: Market, days: number, fromDate: Date)
     first.remarks === ongoing.remarks &&
     first.date <= status.end
   ) {
+    // Adjacent same-reason windows (say q1 cleaning touching q2) coalesce in the scan, so
+    // the true end can lie past the window today's status came from.
+    if (first.endDate && first.endDate > status.end) ongoing.endDate = first.endDate;
     upcoming.shift();
   }
   return [ongoing, ...upcoming];

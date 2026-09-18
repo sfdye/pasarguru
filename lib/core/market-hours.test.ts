@@ -199,6 +199,22 @@ test('nextOpenDay — null when every day is closed', () => {
   assert.equal(nextOpenDay(closed, 3), null);
 });
 
+test('resolveHoursDisplay — past close with a 24h tomorrow opens at midnight', () => {
+  // Marsiling Lane Sunday 3pm: today's range ended 1:30pm, Monday is open 24 hours.
+  const d = resolveHoursDisplay('Marsiling Lane Blk 20/21', 0, 900);
+  assert.equal(d.kind, 'closedByHours');
+  assert.equal(d.opensAt, '12:00 am');
+  assert.equal(d.opensAtDay, 'mon');
+});
+
+test('resolveHoursDisplay — past close with tomorrow closed scans the week', () => {
+  // Pek Kio Sunday 11:05pm: Monday is "Closed", so the next opening is Tuesday's.
+  const d = resolveHoursDisplay('Cambridge Road Blk 41A (Pek Kio Market and Food Centre)', 0, 1385);
+  assert.equal(d.kind, 'closedByHours');
+  assert.equal(d.opensAt, '5:30 am');
+  assert.equal(d.opensAtDay, 'tue');
+});
+
 test('sgMinutes and sgDayOfWeek', () => {
   const now = new Date('2024-01-10T12:00:00Z');
   assert.equal(sgMinutes(now), 20 * 60);
