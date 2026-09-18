@@ -57,7 +57,7 @@ export default function UpcomingClosures({ market }: { market: Market }) {
               <View style={styles.reasonWrap}>
                 <Icon name={CLOSURE_ICON[closure.reason]} size={16} color="textMuted" />
                 <Text variant="subhead" tone="muted" style={styles.reason}>
-                  {closureReasonShort(closure.reason, closure.remarks, t)}
+                  {closureReasonShort(closure.reason, closure.remarks, t, lang)}
                 </Text>
               </View>
             </View>

@@ -1,5 +1,6 @@
-import type { MarketStatus, NotifiableReason } from './core/market-logic';
+import type { MarketStatus, NotifiableReason, Lang } from './core/market-logic';
 import type { HoursDisplay } from './core/market-hours';
+import { localizeRemarks } from './core/remarks-words';
 import { decodeEntities } from './markets';
 import type { Translate } from './store';
 
@@ -35,11 +36,11 @@ export function statusLabel(
 }
 
 /** Why the market is in this state, one line. Empty when it is simply open. */
-export function reasonText(status: MarketStatus, t: Translate): string {
+export function reasonText(status: MarketStatus, t: Translate, lang: Lang): string {
   if (status.status === 'warning') return t('reasonMonday');
   if (status.status === 'closed') {
     if (status.reason === 'cleaning') return t('reasonCleaning');
-    return status.remarks ? decodeEntities(status.remarks) : t('otherWorks');
+    return status.remarks ? localizeRemarks(decodeEntities(status.remarks), lang) : t('otherWorks');
   }
   return '';
 }
@@ -48,8 +49,9 @@ export function reasonText(status: MarketStatus, t: Translate): string {
 export function closureReasonShort(
   reason: NotifiableReason,
   remarks: string | undefined,
-  t: Translate
+  t: Translate,
+  lang: Lang
 ): string {
   if (reason === 'cleaning') return t('cleaning');
-  return remarks ? decodeEntities(remarks) : t('otherWorks');
+  return remarks ? localizeRemarks(decodeEntities(remarks), lang) : t('otherWorks');
 }

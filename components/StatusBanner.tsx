@@ -33,7 +33,7 @@ export default function StatusBanner({
   const lang = useLang();
   const t = useT();
 
-  const reason = reasonText(status, t);
+  const reason = reasonText(status, t, lang);
   const label = statusLabel(tone, t, hoursDisplay);
 
   const DAY_KEY_TO_DOW: Record<string, number> = {
