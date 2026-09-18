@@ -15,14 +15,17 @@ const TIME_LABELS = { open: 'openNow', closed: 'closedNow' } as const;
 /**
  * The label on a pill or banner: OPEN / CLOSED / REST DAY.
  * When hours data is available, OPEN 24H replaces OPEN for 24-hour markets.
+ * With `compact`, the soon states name themselves — a row has no timed subtitle to
+ * explain a bare CLOSED that flips to OPEN in five minutes.
  */
 export function statusLabel(
   tone: StatusTone,
   t: Translate,
-  hoursDisplay?: HoursDisplay | null
+  hoursDisplay?: HoursDisplay | null,
+  compact = false
 ): string {
-  if (hoursDisplay?.kind === 'opensSoon') return t('closedNow');
-  if (hoursDisplay?.kind === 'closesSoon') return t('openNow');
+  if (hoursDisplay?.kind === 'opensSoon') return compact ? t('opensSoonLabel') : t('closedNow');
+  if (hoursDisplay?.kind === 'closesSoon') return compact ? t('closesSoonLabel') : t('openNow');
   if (tone === 'warning') return t(LABELS.warning);
   if (tone === 'closed') return t(LABELS.closed);
   // tone === 'open'

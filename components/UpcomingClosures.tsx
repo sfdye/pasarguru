@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { Icon, Text, type IconName } from './ui';
-import { getUpcomingClosures, type ClosureReason, type Market } from '../lib/core/market-logic';
+import { getDisplayClosures, type ClosureReason, type Market } from '../lib/core/market-logic';
 import { formatDateRange } from '../lib/date';
 import { closureReasonShort } from '../lib/status';
 import { useLang, useT, useToday } from '../lib/store';
@@ -26,7 +26,7 @@ export default function UpcomingClosures({ market }: { market: Market }) {
   const [expanded, setExpanded] = useState(false);
 
   const closures = useMemo(
-    () => getUpcomingClosures(market, HORIZON_DAYS, today),
+    () => getDisplayClosures(market, HORIZON_DAYS, today),
     [market, today]
   );
 

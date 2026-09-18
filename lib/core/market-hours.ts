@@ -372,6 +372,24 @@ export interface HoursDisplay {
 }
 
 /**
+ * First opening after a closed day: scans forward up to a week for the next day whose
+ * hours are not "Closed". Returns the formatted open time and that day's key, or null
+ * when every day is closed. A 24-hour day opens at midnight.
+ */
+export function nextOpenDay(
+  hours: MarketHours,
+  dayOfWeek: number
+): { time: string; day: DayKey } | null {
+  for (let i = 1; i <= 7; i++) {
+    const key = DAY_KEYS[(dayOfWeek + i) % 7];
+    const range = parseTimeRange(hours[key] ?? '');
+    if (range === '24h') return { time: formatTime(0), day: key };
+    if (range && typeof range === 'object') return { time: formatTime(range.open), day: key };
+  }
+  return null;
+}
+
+/**
  * Resolves operating-hours status for a market that is *not* closed by NEA (cleaning/R&R)
  * and not on the Monday warning. The caller should check `getMarketStatus` first and only
  * call this when the NEA status is `open`.
@@ -392,7 +410,14 @@ export function resolveHoursDisplay(
   }
 
   if (/^closed$/i.test(label)) {
-    return { kind: 'closedByHours', label: null, opensAt: null, opensAtDay: null, closesAt: null };
+    const next = nextOpenDay(hours, dayOfWeek);
+    return {
+      kind: 'closedByHours',
+      label: null,
+      opensAt: next?.time ?? null,
+      opensAtDay: next?.day ?? null,
+      closesAt: null,
+    };
   }
 
   const range = parseTimeRange(label);

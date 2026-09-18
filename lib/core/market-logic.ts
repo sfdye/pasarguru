@@ -149,6 +149,36 @@ export function getUpcomingClosures(market: Market, days: number, fromDate: Date
 }
 
 /**
+ * What the market-detail closures list shows: `getUpcomingClosures` plus the closure in
+ * progress today, if any, dated with its true start. The forward scan starts tomorrow, so
+ * an ongoing closure would otherwise pose as starting tomorrow — or vanish on its last day.
+ */
+export function getDisplayClosures(market: Market, days: number, fromDate: Date): Closure[] {
+  const status = getMarketStatus(market, stripTime(fromDate));
+  if (status.status !== 'closed') return getUpcomingClosures(market, days, fromDate);
+
+  const ongoing: Closure = {
+    date: status.start,
+    endDate: status.end.getTime() === status.start.getTime() ? undefined : status.end,
+    reason: status.reason,
+    remarks: 'remarks' in status ? status.remarks : undefined,
+  };
+  const upcoming = getUpcomingClosures(market, days, fromDate);
+  // The scan's first entry is the ongoing closure continuing past today when it carries the
+  // same reason and remarks and starts no later than the ongoing end — fold, don't duplicate.
+  const first = upcoming[0];
+  if (
+    first &&
+    first.reason === ongoing.reason &&
+    first.remarks === ongoing.remarks &&
+    first.date <= status.end
+  ) {
+    upcoming.shift();
+  }
+  return [ongoing, ...upcoming];
+}
+
+/**
  * Next day the market is open or on weekly rest. Checks the current closure's end date first
  * (so a multi-year renovation resolves instantly), then scans day-by-day up to 60 days out.
  */

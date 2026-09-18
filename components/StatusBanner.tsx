@@ -76,6 +76,8 @@ export default function StatusBanner({
       {!!nextOpen && tone === 'closed' && !subtitle && (() => {
         const hours = marketName ? getMarketHours(marketName) : null;
         const openTime = hours ? getTodayHoursLabel(hours, nextOpen.getDay()) : null;
+        // A reopen day whose hours say "Closed" contradicts NEA — no time worth showing.
+        if (openTime && /^closed$/i.test(openTime)) return null;
         const timeStr = openTime ? openTime.split(/[–-]/)[0]?.trim() : null;
         const dayStr = DOW_SHORT[lang][nextOpen.getDay()];
         const dateStr = formatDate(nextOpen, lang);

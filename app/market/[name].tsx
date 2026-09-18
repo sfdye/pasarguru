@@ -11,6 +11,7 @@ import { sgMinutes, getTodayHoursLabel, getMarketHours } from '../../lib/core/ma
 import { getDisplayStatus } from '../../lib/core/display-status';
 import { famousBlurb, isFamous } from '../../lib/core/famous';
 import { openInMaps } from '../../lib/maps';
+import { DOW_SHORT } from '../../lib/date';
 import { decodeEntities, getDisplayName, marketCoords } from '../../lib/markets';
 import {
   toggleFavorite,
@@ -51,8 +52,17 @@ export default function MarketDetailScreen() {
   const parsed = parseMarketName(market.name);
   const displayName = getDisplayName(parsed, lang);
   const { status, hours: hoursDisplay, tone } = getDisplayStatus(market, today, sgMinutes());
-  const nextOpen = tone === 'closed' ? getNextOpenDate(market, today) : null;
+  // NEA closures only: getNextOpenDate knows nothing about hours, so an hours-driven
+  // "closed today" would point at tomorrow and garble the banner's opens-again line.
+  const nextOpen = status.status === 'closed' ? getNextOpenDate(market, today) : null;
   const todayHoursLabel = getTodayHoursLabel(getMarketHours(market.name) ?? {}, today.getDay());
+  // "Fri · Closed", not a bare "Closed" that reads as a second status pill; the raw table
+  // token is English-only, so the closed case gets a localized word.
+  const hoursText = todayHoursLabel
+    ? `${DOW_SHORT[lang][today.getDay()]} · ${
+        /^closed$/i.test(todayHoursLabel) ? t('hoursClosed') : todayHoursLabel
+      }`
+    : null;
   const address = market.address_myenv ? decodeEntities(market.address_myenv) : '';
   const description = market.description_myenv ? decodeEntities(market.description_myenv) : '';
   const coords = marketCoords(market);
@@ -149,7 +159,7 @@ export default function MarketDetailScreen() {
               >
                 <Icon name="time" color="textMuted" />
                 <Text variant="subhead" tone="muted">
-                  {todayHoursLabel}
+                  {hoursText}
                 </Text>
               </View>
             )}
