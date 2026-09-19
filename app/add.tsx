@@ -61,7 +61,7 @@ export default function AddMarketsScreen() {
             // The list is long and the search bar is the point of this screen.
             hideWhenScrolling: false,
             textColor: theme.colors.text,
-            hintTextColor: theme.colors.textFaint,
+            hintTextColor: theme.colors.textMuted,
             headerIconColor: theme.colors.textMuted,
           },
           headerRight: () => (

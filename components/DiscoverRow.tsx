@@ -67,11 +67,11 @@ function DiscoverRowInner({
         accessible={false}
       />
       <View style={styles.info}>
-        <Text variant="headline" numberOfLines={1}>
+        <Text variant="headline" numberOfLines={2}>
           {displayName}
         </Text>
         {!!parsed.street && (
-          <Text variant="subhead" tone="muted" numberOfLines={1}>
+          <Text variant="subhead" tone="muted" numberOfLines={2}>
             {parsed.street}
           </Text>
         )}
