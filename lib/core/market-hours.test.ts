@@ -6,6 +6,7 @@ import {
   getMarketHours,
   hasHours,
   resolveHoursDisplay,
+  nextOpenDay,
   sgMinutes,
   sgDayOfWeek,
   type MarketHours,
@@ -169,10 +170,49 @@ test('resolveHoursDisplay — no data', () => {
   assert.equal(d.kind, 'noData');
 });
 
-test('resolveHoursDisplay — closed today', () => {
+test('resolveHoursDisplay — closed today points at the next open day', () => {
+  // Berseh is closed Sunday AND Monday — the scan must skip both and land on Tuesday.
   const d = resolveHoursDisplay('Berseh Food Centre', 0, 600);
   assert.equal(d.kind, 'closedByHours');
-  assert.equal(d.opensAt, null);
+  assert.equal(d.opensAt, '5:30 am');
+  assert.equal(d.opensAtDay, 'tue');
+});
+
+test('resolveHoursDisplay — closed day skips consecutive closed days (Telok Blangah Thu/Fri)', () => {
+  const thursday = resolveHoursDisplay('Telok Blangah Drive Blk 79 (Telok Blangah Food Centre)', 4, 600);
+  assert.equal(thursday.kind, 'closedByHours');
+  assert.equal(thursday.opensAt, '6:00 am');
+  assert.equal(thursday.opensAtDay, 'sat');
+
+  const friday = resolveHoursDisplay('Telok Blangah Drive Blk 79 (Telok Blangah Food Centre)', 5, 600);
+  assert.equal(friday.opensAt, '6:00 am');
+  assert.equal(friday.opensAtDay, 'sat');
+});
+
+test('nextOpenDay — 24h day opens at midnight', () => {
+  const hours: MarketHours = { wed: 'Closed', thu: 'Open 24 hours' };
+  assert.deepEqual(nextOpenDay(hours, 3), { time: '12:00 am', day: 'thu' });
+});
+
+test('nextOpenDay — null when every day is closed', () => {
+  const closed = { mon: 'Closed', tue: 'Closed', wed: 'Closed', thu: 'Closed', fri: 'Closed', sat: 'Closed', sun: 'Closed' };
+  assert.equal(nextOpenDay(closed, 3), null);
+});
+
+test('resolveHoursDisplay — past close with a 24h tomorrow opens at midnight', () => {
+  // Marsiling Lane Sunday 3pm: today's range ended 1:30pm, Monday is open 24 hours.
+  const d = resolveHoursDisplay('Marsiling Lane Blk 20/21', 0, 900);
+  assert.equal(d.kind, 'closedByHours');
+  assert.equal(d.opensAt, '12:00 am');
+  assert.equal(d.opensAtDay, 'mon');
+});
+
+test('resolveHoursDisplay — past close with tomorrow closed scans the week', () => {
+  // Pek Kio Sunday 11:05pm: Monday is "Closed", so the next opening is Tuesday's.
+  const d = resolveHoursDisplay('Cambridge Road Blk 41A (Pek Kio Market and Food Centre)', 0, 1385);
+  assert.equal(d.kind, 'closedByHours');
+  assert.equal(d.opensAt, '5:30 am');
+  assert.equal(d.opensAtDay, 'tue');
 });
 
 test('sgMinutes and sgDayOfWeek', () => {

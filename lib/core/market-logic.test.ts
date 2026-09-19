@@ -5,6 +5,7 @@ import {
   stripTime,
   getMarketStatus,
   getUpcomingClosures,
+  getDisplayClosures,
   getNextOpenDate,
   parseMarketName,
   normalizeMarkets,
@@ -236,6 +237,92 @@ describe('getUpcomingClosures', () => {
     const closures = getUpcomingClosures(market, 4, tues);
     // Wed, Thu, Fri, Sat — no Monday, no cleaning in June for this market
     assert.equal(closures.length, 0);
+  });
+});
+
+describe('getDisplayClosures', () => {
+  const market = {
+    name: 'Test Market',
+    q1_cleaningstartdate: '5/1/2026',
+    q1_cleaningenddate: '7/1/2026',
+    q2_cleaningstartdate: '',
+    q2_cleaningenddate: '',
+    q3_cleaningstartdate: '',
+    q3_cleaningenddate: '',
+    q4_cleaningstartdate: '',
+    q4_cleaningenddate: '',
+    other_works_startdate: 'NA',
+    other_works_enddate: 'NA',
+    remarks_other_works: 'nil',
+  };
+
+  test('prepends the ongoing closure with its true start date', () => {
+    // Mid-cleaning (Jan 6): the scan from tomorrow would manufacture a Jan 7 start.
+    const midClean = new Date(2026, 0, 6);
+    const closures = getDisplayClosures(market, 10, midClean);
+    assert.equal(closures.length, 1);
+    assert.equal(closures[0].date.getDate(), 5);
+    assert.equal(closures[0].endDate!.getDate(), 7);
+    assert.equal(closures[0].reason, 'cleaning');
+  });
+
+  test('shows a closure that ends today instead of omitting it', () => {
+    const lastCleanDay = new Date(2026, 0, 7);
+    const closures = getDisplayClosures(market, 10, lastCleanDay);
+    assert.equal(closures.length, 1);
+    assert.equal(closures[0].date.getDate(), 5);
+    assert.equal(closures[0].endDate!.getDate(), 7);
+  });
+
+  test('matches getUpcomingClosures when today is open', () => {
+    const open = new Date(2026, 1, 10); // Feb 10, 2026 — no closure around
+    assert.deepEqual(getDisplayClosures(market, 10, open), getUpcomingClosures(market, 10, open));
+  });
+
+  test('keeps a distinct closure that starts tomorrow (no fold, different reason)', () => {
+    // Cleaning ends today; a renovation starts tomorrow. Different reason — two rows.
+    const marketHandover = {
+      ...market,
+      other_works_startdate: '8/1/2026',
+      other_works_enddate: '28/2/2026',
+      remarks_other_works: 'Renovation',
+    };
+    const lastCleanDay = new Date(2026, 0, 7);
+    const closures = getDisplayClosures(marketHandover, 60, lastCleanDay);
+    assert.equal(closures.length, 2);
+    assert.equal(closures[0].reason, 'cleaning');
+    assert.equal(closures[1].reason, 'other_works');
+    assert.equal(closures[1].remarks, 'Renovation');
+  });
+
+  test('carries remarks on the ongoing other-works closure', () => {
+    const marketReno = {
+      ...market,
+      other_works_startdate: '14/9/2026',
+      other_works_enddate: '27/12/2026',
+      remarks_other_works: 'Repairs and Redecoration',
+    };
+    const today = new Date(2026, 8, 18); // Sep 18, 2026 — four days into the renovation
+    const closures = getDisplayClosures(marketReno, 90, today);
+    assert.equal(closures.length, 1);
+    assert.equal(closures[0].reason, 'other_works');
+    assert.equal(closures[0].remarks, 'Repairs and Redecoration');
+    const d = closures[0].date;
+    assert.equal(`${d.getDate()}/${d.getMonth() + 1}/2026`, '14/9/2026');
+  });
+
+  test('fold extends the range when an adjacent same-reason window continues it', () => {
+    // q1 cleaning (Jan 5-7) touches q2 cleaning (Jan 8-10): the scan coalesces them, and
+    // the ongoing row must carry the true end, not just today's window end.
+    const marketAdjacent = {
+      ...market,
+      q2_cleaningstartdate: '8/1/2026',
+      q2_cleaningenddate: '10/1/2026',
+    };
+    const closures = getDisplayClosures(marketAdjacent, 10, new Date(2026, 0, 6));
+    assert.equal(closures.length, 1);
+    assert.equal(closures[0].date.getDate(), 5);
+    assert.equal(closures[0].endDate!.getDate(), 10);
   });
 });
 

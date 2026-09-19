@@ -365,10 +365,28 @@ export interface HoursDisplay {
   label: string | null;
   /** Formatted opening time when closed by hours, e.g. "7:00 am". Null otherwise. */
   opensAt: string | null;
-  /** Day-of-week key for the opening time ('mon', 'tue', etc). Null when opening today or no data. */
+  /** Day-of-week key for the opening time ('mon', 'tue', etc). Null when opening today or no opening within a week. */
   opensAtDay: DayKey | null;
   /** Formatted closing time when open, e.g. "10:00 pm". Null otherwise. */
   closesAt: string | null;
+}
+
+/**
+ * First opening after a closed day: scans forward up to a week for the next day whose
+ * hours are not "Closed". Returns the formatted open time and that day's key, or null
+ * when every day is closed. A 24-hour day opens at midnight.
+ */
+export function nextOpenDay(
+  hours: MarketHours,
+  dayOfWeek: number
+): { time: string; day: DayKey } | null {
+  for (let i = 1; i <= 7; i++) {
+    const key = DAY_KEYS[(dayOfWeek + i) % 7];
+    const range = parseTimeRange(hours[key] ?? '');
+    if (range === '24h') return { time: formatTime(0), day: key };
+    if (range && typeof range === 'object') return { time: formatTime(range.open), day: key };
+  }
+  return null;
 }
 
 /**
@@ -392,7 +410,14 @@ export function resolveHoursDisplay(
   }
 
   if (/^closed$/i.test(label)) {
-    return { kind: 'closedByHours', label: null, opensAt: null, opensAtDay: null, closesAt: null };
+    const next = nextOpenDay(hours, dayOfWeek);
+    return {
+      kind: 'closedByHours',
+      label: null,
+      opensAt: next?.time ?? null,
+      opensAtDay: next?.day ?? null,
+      closesAt: null,
+    };
   }
 
   const range = parseTimeRange(label);
@@ -414,7 +439,9 @@ export function resolveHoursDisplay(
     return { kind: 'open', label, opensAt: null, opensAtDay: null, closesAt };
   }
 
-  const opensAtInfo = getOpensAtInfo(hours, dayOfWeek, minutes);
+  // Past today's close with tomorrow "Closed", "Open 24 hours" or absent: getOpensAtInfo
+  // stops at tomorrow, so scan the week for the real next opening.
+  const opensAtInfo = getOpensAtInfo(hours, dayOfWeek, minutes) ?? nextOpenDay(hours, dayOfWeek);
   if (opensAtInfo) {
     const minsUntil = minutesUntilOpen(hours, dayOfWeek, minutes);
     if (minsUntil !== null && minsUntil <= 60) {

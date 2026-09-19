@@ -1,5 +1,6 @@
-import type { MarketStatus, NotifiableReason } from './core/market-logic';
+import type { MarketStatus, NotifiableReason, Lang } from './core/market-logic';
 import type { HoursDisplay } from './core/market-hours';
+import { localizeRemarks } from './core/remarks-words';
 import { decodeEntities } from './markets';
 import type { Translate } from './store';
 
@@ -15,14 +16,17 @@ const TIME_LABELS = { open: 'openNow', closed: 'closedNow' } as const;
 /**
  * The label on a pill or banner: OPEN / CLOSED / REST DAY.
  * When hours data is available, OPEN 24H replaces OPEN for 24-hour markets.
+ * With `compact`, the soon states name themselves — a row has no timed subtitle to
+ * explain a bare CLOSED that flips to OPEN in five minutes.
  */
 export function statusLabel(
   tone: StatusTone,
   t: Translate,
-  hoursDisplay?: HoursDisplay | null
+  hoursDisplay?: HoursDisplay | null,
+  compact = false
 ): string {
-  if (hoursDisplay?.kind === 'opensSoon') return t('closedNow');
-  if (hoursDisplay?.kind === 'closesSoon') return t('openNow');
+  if (hoursDisplay?.kind === 'opensSoon') return compact ? t('opensSoonLabel') : t('closedNow');
+  if (hoursDisplay?.kind === 'closesSoon') return compact ? t('closesSoonLabel') : t('openNow');
   if (tone === 'warning') return t(LABELS.warning);
   if (tone === 'closed') return t(LABELS.closed);
   // tone === 'open'
@@ -32,11 +36,11 @@ export function statusLabel(
 }
 
 /** Why the market is in this state, one line. Empty when it is simply open. */
-export function reasonText(status: MarketStatus, t: Translate): string {
+export function reasonText(status: MarketStatus, t: Translate, lang: Lang): string {
   if (status.status === 'warning') return t('reasonMonday');
   if (status.status === 'closed') {
     if (status.reason === 'cleaning') return t('reasonCleaning');
-    return status.remarks ? decodeEntities(status.remarks) : t('otherWorks');
+    return status.remarks ? localizeRemarks(decodeEntities(status.remarks), lang) : t('otherWorks');
   }
   return '';
 }
@@ -45,8 +49,9 @@ export function reasonText(status: MarketStatus, t: Translate): string {
 export function closureReasonShort(
   reason: NotifiableReason,
   remarks: string | undefined,
-  t: Translate
+  t: Translate,
+  lang: Lang
 ): string {
   if (reason === 'cleaning') return t('cleaning');
-  return remarks ? decodeEntities(remarks) : t('otherWorks');
+  return remarks ? localizeRemarks(decodeEntities(remarks), lang) : t('otherWorks');
 }

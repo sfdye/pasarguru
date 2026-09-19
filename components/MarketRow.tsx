@@ -38,7 +38,7 @@ function MarketRowInner({ name }: { name: string }) {
   const displayName = getDisplayName(parsed, lang);
   const { hours: hoursDisplay, tone } = getDisplayStatus(market, today, sgMinutes());
 
-  const label = statusLabel(tone, t, hoursDisplay);
+  const label = statusLabel(tone, t, hoursDisplay, true);
 
   const nextCleaning = getNextCleaningDate(market, today);
 

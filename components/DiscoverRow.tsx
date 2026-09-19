@@ -43,7 +43,7 @@ function DiscoverRowInner({
 
   const { hours, tone } = getDisplayStatus(market, today, sgMinutes());
   const showStatus = !(tone === 'open' && (!hours || hours.kind === 'noData'));
-  const label = statusLabel(tone, t, hours);
+  const label = statusLabel(tone, t, hours, true);
 
   return (
     <Pressable

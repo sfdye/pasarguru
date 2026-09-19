@@ -33,7 +33,7 @@ export default function StatusBanner({
   const lang = useLang();
   const t = useT();
 
-  const reason = reasonText(status, t);
+  const reason = reasonText(status, t, lang);
   const label = statusLabel(tone, t, hoursDisplay);
 
   const DAY_KEY_TO_DOW: Record<string, number> = {
@@ -76,12 +76,19 @@ export default function StatusBanner({
       {!!nextOpen && tone === 'closed' && !subtitle && (() => {
         const hours = marketName ? getMarketHours(marketName) : null;
         const openTime = hours ? getTodayHoursLabel(hours, nextOpen.getDay()) : null;
-        const timeStr = openTime ? openTime.split(/[–-]/)[0]?.trim() : null;
-        const dayStr = DOW_SHORT[lang][nextOpen.getDay()];
+        // "Closed" and "Open 24 hours" are states, not times — the date-only line covers them.
+        const timeStr =
+          openTime && !/^(closed|open 24 hours)$/i.test(openTime)
+            ? openTime.split(/[–-]/)[0]?.trim()
+            : null;
+        // Always name the date, not just the weekday — a reopen months out reads as
+        // this week otherwise. formatDate already carries the weekday.
         const dateStr = formatDate(nextOpen, lang);
         return (
           <Text variant="subhead" tone="onStatus" style={[styles.centered, styles.dim]}>
-            {t('opensAgain', { time: timeStr ?? '', day: dayStr, date: dateStr })}
+            {timeStr
+              ? t('opensAgain', { time: timeStr, date: dateStr })
+              : t('opensAgainDate', { date: dateStr })}
           </Text>
         );
       })()}
