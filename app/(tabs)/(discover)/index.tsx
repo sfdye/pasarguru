@@ -98,7 +98,7 @@ export default function DiscoverScreen() {
             onChangeText: (e) => setQuery(e.nativeEvent.text),
             hideWhenScrolling: false,
             textColor: theme.colors.text,
-            hintTextColor: theme.colors.textFaint,
+            hintTextColor: theme.colors.textMuted,
             headerIconColor: theme.colors.textMuted,
           },
         }}
